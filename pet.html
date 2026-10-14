@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Mentari Mod — Fox Playground</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      #world {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: linear-gradient(
+          to bottom,
+          #82d4ff 0%,
+          #d9f5ff 55%,
+          #c9e9a5 55%,
+          #91c96d 100%
+        );
+        transition: background 1.8s cubic-bezier(0.65, 0, 0.35, 1);
+      }
+      .sky {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      .sun {
+        position: absolute;
+        width: 105px;
+        height: 105px;
+        left: 78%;
+        top: 12%;
+        border-radius: 50%;
+        background: #ffe58a;
+        box-shadow:
+          0 0 35px rgba(255, 224, 100, 0.7),
+          0 0 90px rgba(255, 218, 80, 0.35);
+        transform: translate(-50%, 0);
+        transition:
+          top 2.2s cubic-bezier(0.65, 0, 0.35, 1),
+          left 2.2s cubic-bezier(0.65, 0, 0.35, 1),
+          opacity 1.3s ease,
+          transform 2.2s cubic-bezier(0.65, 0, 0.35, 1);
+      }
+      #world.night .sun {
+        left: 22%;
+        top: 78%;
+        opacity: 0;
+        transform: translate(-50%, 30px) scale(0.65);
+      }
+      .moon {
+        position: absolute;
+        width: 82px;
+        height: 82px;
+        right: 13%;
+        top: 75%;
+        border-radius: 50%;
+        background: #fff8d7;
+        box-shadow:
+          0 0 35px rgba(255, 255, 220, 0.35),
+          0 0 80px rgba(255, 255, 220, 0.15);
+        opacity: 0;
+        transform: translateY(80px) scale(0.7);
+        transition:
+          top 2.2s cubic-bezier(0.65, 0, 0.35, 1),
+          opacity 1.5s ease,
+          transform 2.2s cubic-bezier(0.65, 0, 0.35, 1);
+      }
+      #world.night .moon {
+        top: 12%;
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      .stars {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 2s ease;
+      }
+      #world.night .stars {
+        opacity: 1;
+      }
+      .star {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+        animation: twinkle 2s ease-in-out infinite alternate;
+      }
+      .star.small {
+        width: 2px;
+        height: 2px;
+      }
+      .star.big {
+        width: 4px;
+        height: 4px;
+      }
+      @keyframes twinkle {
+        from {
+          opacity: 0.25;
+          transform: scale(0.75);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1.25);
+        }
+      }
+      .sunset {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0;
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 130, 80, 0.25),
+          rgba(255, 180, 100, 0.08) 45%,
+          transparent 65%
+        );
+        transition: opacity 1.5s ease;
+      }
+      #world.sunset-active .sunset {
+        opacity: 1;
+      }
+      .cloud {
+        position: absolute;
+        width: 140px;
+        height: 38px;
+        border-radius: 50px;
+        background: rgba(255, 255, 255, 0.65);
+        transition:
+          opacity 1.5s ease,
+          filter 1.5s ease;
+      }
+      .cloud::before,
+      .cloud::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: inherit;
+      }
+      .cloud::before {
+        width: 55px;
+        height: 55px;
+        left: 20px;
+        bottom: 5px;
+      }
+      .cloud::after {
+        width: 70px;
+        height: 70px;
+        right: 20px;
+        bottom: 0;
+      }
+      .cloud-1 {
+        top: 15%;
+        left: -180px;
+        animation: cloudMove 70s linear infinite;
+      }
+      .cloud-2 {
+        top: 29%;
+        left: -250px;
+        transform: scale(0.7);
+        animation: cloudMove 95s linear infinite;
+        animation-delay: -20s;
+      }
+      #world.night .cloud {
+        opacity: 0.12;
+        filter: brightness(0.6);
+      }
+      @keyframes cloudMove {
+        to {
+          transform: translateX(calc(100vw + 500px));
+        }
+      }
+      .ground {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 43%;
+        background: linear-gradient(to bottom, #b9df8e, #82b85d);
+        transition:
+          background 1.8s ease,
+          filter 1.8s ease;
+      }
+      #world.night .ground {
+        background: linear-gradient(to bottom, #314b38, #182a21);
+        filter: brightness(0.8);
+      }
+      /* SVG wave di atas ground */
+      .ground-wave {
+        position: absolute;
+        top: -58px;
+        left: 0;
+        width: 100%;
+        height: 60px;
+        overflow: visible;
+        pointer-events: none;
+      }
+      .ground-wave path {
+        fill: #b9df8e;
+        transition: fill 1.8s ease;
+      }
+      #world.night .ground-wave path {
+        fill: #314b38;
+      }
+      .grass {
+        position: absolute;
+        inset: 0;
+        opacity: 0.8;
+        background: repeating-linear-gradient(
+          82deg,
+          transparent 0,
+          transparent 15px,
+          rgba(40, 80, 30, 0.08) 16px,
+          transparent 18px
+        );
+        transition: opacity 1.5s ease;
+      }
+      #world.night .grass {
+        opacity: 0.25;
+      }
+
+      /* Blade grass */
+      .grass-blades {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 28px;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .blade {
+        position: absolute;
+        bottom: 0;
+        width: 4px;
+        border-radius: 4px 4px 2px 2px;
+        transform-origin: bottom center;
+        animation: sway 2.4s ease-in-out infinite alternate;
+      }
+      .blade.short {
+        height: 12px;
+        background: #5aab38;
+      }
+      .blade.mid {
+        height: 18px;
+        background: #4d9e30;
+      }
+      .blade.tall {
+        height: 24px;
+        background: #3f8f24;
+      }
+      #world.night .blade {
+        filter: brightness(0.45);
+      }
+      @keyframes sway {
+        from {
+          transform: rotate(-8deg);
+        }
+        to {
+          transform: rotate(8deg);
+        }
+      }
+      .blade:nth-child(odd) {
+        animation-direction: alternate-reverse;
+      }
+      .blade:nth-child(3n) {
+        animation-duration: 2s;
+      }
+      .blade:nth-child(5n) {
+        animation-duration: 3.1s;
+      }
+
+      /* Rocks */
+      .rock {
+        position: absolute;
+        bottom: 14px;
+        border-radius: 50% 55% 48% 52% / 55% 50% 58% 45%;
+        background: linear-gradient(
+          135deg,
+          #b0b5b0 0%,
+          #8a9088 60%,
+          #6e756c 100%
+        );
+        box-shadow:
+          inset -3px -3px 6px rgba(0, 0, 0, 0.18),
+          inset 2px 2px 5px rgba(255, 255, 255, 0.22),
+          0 3px 6px rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+        transition: filter 1.8s ease;
+      }
+      .rock::after {
+        content: "";
+        position: absolute;
+        top: 18%;
+        left: 18%;
+        width: 35%;
+        height: 22%;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(-20deg);
+      }
+      .rock.sm {
+        width: 22px;
+        height: 16px;
+      }
+      .rock.md {
+        width: 34px;
+        height: 24px;
+      }
+      .rock.lg {
+        width: 48px;
+        height: 32px;
+      }
+      #world.night .rock {
+        filter: brightness(0.55);
+      }
+      .title {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: rgba(35, 65, 30, 0.25);
+        pointer-events: none;
+        transition: color 1.8s ease;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: clamp(36px, 6vw, 70px);
+      }
+      .title p {
+        margin: 8px 0 0;
+        font-size: 14px;
+      }
+      #world.night .title {
+        color: rgba(220, 235, 255, 0.13);
+      }
+      .fox {
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        left: 0;
+        bottom: 19%;
+        z-index: 10;
+        pointer-events: auto;
+        cursor: pointer;
+        transform-origin: center bottom;
+        transition:
+          left 0.05s linear,
+          bottom 0.3s ease,
+          filter 0.6s ease;
+      }
+      .fox img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        image-rendering: pixelated;
+        pointer-events: none;
+      }
+      #world.night .fox {
+        filter: brightness(0.82) drop-shadow(0 0 5px rgba(180, 200, 255, 0.08));
+      }
+      .shadow {
+        position: absolute;
+        width: 60px;
+        height: 13px;
+        bottom: 20%;
+        border-radius: 50%;
+        background: rgba(40, 70, 30, 0.22);
+        filter: blur(3px);
+        transform: translateX(-50%);
+        z-index: 4;
+        transition: background 1.5s ease;
+      }
+      #world.night .shadow {
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .chicken {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        left: 0;
+        bottom: 19%;
+        z-index: 10;
+        pointer-events: auto;
+        cursor: pointer;
+        transform-origin: center bottom;
+        transition:
+          left 0.05s linear,
+          bottom 0.3s ease,
+          filter 0.6s ease;
+      }
+      .chicken img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        image-rendering: pixelated;
+        pointer-events: none;
+      }
+      #world.night .chicken {
+        filter: brightness(0.82) drop-shadow(0 0 5px rgba(180, 200, 255, 0.08));
+      }
+      .chicken.clicked {
+        animation: clicked 0.45s ease;
+      }
+      #shadowChicken {
+        width: 30px;
+        height: 9px;
+      }
+      .fox.clicked {
+        animation: clicked 0.45s ease;
+      }
+      @keyframes clicked {
+        0% {
+          transform: scaleX(var(--flip)) scaleY(1);
+        }
+        35% {
+          transform: scaleX(var(--flip)) translateY(-9px) scaleY(0.95);
+        }
+        65% {
+          transform: scaleX(var(--flip)) translateY(2px) scaleY(1.03);
+        }
+        100% {
+          transform: scaleX(var(--flip)) scaleY(1);
+        }
+      }
+      .reaction {
+        position: absolute;
+        z-index: 50;
+        padding: 8px 11px;
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #30452c;
+        font-size: 12px;
+        font-weight: 700;
+        pointer-events: none;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translate(-50%, 8px) scale(0.85);
+        transition:
+          opacity 0.25s ease,
+          transform 0.25s ease;
+        box-shadow: 0 6px 20px rgba(30, 60, 30, 0.12);
+      }
+      .reaction.show {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+      .status {
+        position: absolute;
+        top: 22px;
+        left: 22px;
+        z-index: 100;
+        padding: 12px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(12px);
+        color: #30452c;
+        font-size: 13px;
+        box-shadow: 0 10px 30px rgba(30, 60, 30, 0.08);
+        transition:
+          background 1.5s ease,
+          color 1.5s ease;
+      }
+      .status strong {
+        display: block;
+        font-size: 15px;
+      }
+      #world.night .status {
+        background: rgba(20, 35, 30, 0.45);
+        color: #dbe9dd;
+      }
+      .controls {
+        position: absolute;
+        right: 20px;
+        bottom: 20px;
+        z-index: 100;
+      }
+      .controls button {
+        border: 0;
+        padding: 10px 14px;
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #30452c;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        transition:
+          transform 0.2s ease,
+          background 0.3s ease,
+          color 0.3s ease;
+      }
+      .controls button:hover {
+        transform: translateY(-2px);
+        background: white;
+      }
+      #world.night button {
+        background: rgba(35, 50, 45, 0.7);
+        color: #e6f0e8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="world">
+      <div class="sky">
+        <div class="sun"></div>
+        <div class="moon"></div>
+        <div class="stars" id="stars"></div>
+        <div class="sunset"></div>
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+      </div>
+
+      <div class="ground">
+        <!-- Wave bukit di tepi atas ground -->
+        <svg
+          class="ground-wave"
+          viewBox="0 0 1440 60"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0,60 L0,38 C80,18 160,8 240,18 C320,28 400,52 480,50 C560,48 640,24 720,16 C800,8 880,18 960,28 C1040,38 1120,42 1200,32 C1280,22 1360,8 1440,20 L1440,60 Z"
+          />
+        </svg>
+
+        <div class="grass"></div>
+
+        <!-- Rocks -->
+        <div class="rock lg" style="left: 8%"></div>
+        <div class="rock sm" style="left: 12%"></div>
+        <div class="rock md" style="left: 31%"></div>
+        <div class="rock sm" style="left: 34%; bottom: 20px"></div>
+        <div class="rock lg" style="left: 62%"></div>
+        <div class="rock md" style="left: 67%"></div>
+        <div class="rock sm" style="left: 82%"></div>
+        <div class="rock lg" style="left: 88%"></div>
+
+        <!-- Grass blades -->
+        <div class="grass-blades" id="grassBlades"></div>
+      </div>
+
+      <div class="shadow" id="shadowOrange"></div>
+      <div class="shadow" id="shadowWhite"></div>
+      <div class="shadow" id="shadowChicken"></div>
+      <div class="reaction" id="reactionOrange"></div>
+      <div class="reaction" id="reactionWhite"></div>
+      <div class="reaction" id="reactionChicken"></div>
+
+      <div class="fox" id="orange"><img id="orangeImg" alt="Orange Fox" /></div>
+      <div class="fox" id="white"><img id="whiteImg" alt="White Fox" /></div>
+      <div class="chicken" id="chicken">
+        <img id="chickenImg" alt="Chicken" />
+      </div>
+
+      <div class="controls">
+        <button id="nightButton">🌙 Malam</button>
+      </div>
+    </div>
+
+    <script src="pet.js"></script>
+  </body>
+</html>
