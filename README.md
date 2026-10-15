@@ -16,7 +16,7 @@
 Repositori ini adalah **modifikasi** dari proyek [MENTARI MOD](https://github.com/lukman754/Mentari-Unpam) oleh [Lukman Muludin](https://github.com/lukman754), yang dirilis di bawah lisensi MIT. Lihat bagian [Atribusi dan Lisensi](#-atribusi-dan-lisensi).
 
 <div align="center">
-  <img width="1920" height="887" alt="Tampilan MENTARI MOD" src="https://raw.githubusercontent.com/alfinasinaja/mentari-modv2/refs/heads/gh-pages/src/assets/mockup.png" />
+  <img alt="Tampilan MENTARI MOD" src="https://raw.githubusercontent.com/alfinasinaja/mentari-modv2/refs/heads/gh-pages/src/assets/mockup.png" />
 </div>
 
 ## ✨ Fitur Utama
